@@ -34,9 +34,10 @@ func main() {
 		}
 	}()
 	r := gin.Default()
+	r.GET("/order/:id", func(c *gin.Context) {})
 	srv := &http.Server{
 		Addr:    ":" + cfg.Server.Port,
-		Handler: r.Handler(),
+		Handler: r,
 	}
 	go func() {
 		sigint := make(chan os.Signal, 1)
