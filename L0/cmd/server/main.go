@@ -12,7 +12,7 @@ type Config struct {
 }
 
 func main() {
-	cfg, err := config.LoadConfig("config/config.yml")
+	cfg, err := config.LoadConfig("configs/config.yaml")
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
