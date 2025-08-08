@@ -22,7 +22,7 @@ func NewConsumer(brokers []string, topic, groupID string) *Consumer {
 			Logger:      kafka.LoggerFunc(log.Printf),
 			ErrorLogger: kafka.LoggerFunc(log.Printf),
 		}),
-		Messages: make(chan kafka.Message, 10e2),
+		Messages: make(chan kafka.Message, 100),
 	}
 }
 
