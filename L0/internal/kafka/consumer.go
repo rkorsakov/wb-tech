@@ -2,13 +2,13 @@ package kafka
 
 import (
 	"context"
-	"fmt"
 	"github.com/segmentio/kafka-go"
 	"log"
 )
 
 type Consumer struct {
-	reader *kafka.Reader
+	reader   *kafka.Reader
+	Messages chan kafka.Message
 }
 
 func NewConsumer(brokers []string, topic, groupID string) *Consumer {
@@ -22,6 +22,7 @@ func NewConsumer(brokers []string, topic, groupID string) *Consumer {
 			Logger:      kafka.LoggerFunc(log.Printf),
 			ErrorLogger: kafka.LoggerFunc(log.Printf),
 		}),
+		Messages: make(chan kafka.Message, 10e2),
 	}
 }
 
@@ -29,12 +30,17 @@ func (c *Consumer) Close() error {
 	return c.reader.Close()
 }
 
-func (c *Consumer) Start() error {
+func (c *Consumer) Start(ctx context.Context) error {
 	for {
-		m, err := c.reader.ReadMessage(context.Background())
-		if err != nil {
-			return err
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			m, err := c.reader.ReadMessage(ctx)
+			if err != nil {
+				return err
+			}
+			c.Messages <- m
 		}
-		fmt.Printf("message at offset %d: %s = %s\n", m.Offset, string(m.Key), string(m.Value))
 	}
 }
