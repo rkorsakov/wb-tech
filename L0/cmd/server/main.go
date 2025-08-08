@@ -5,6 +5,7 @@ import (
 	"L0/internal/db/postgres"
 	"L0/internal/kafka"
 	"context"
+	_ "github.com/lib/pq"
 	"log"
 	"net/http"
 	"os"
@@ -40,7 +41,17 @@ func main() {
 		}
 	}()
 	r := gin.Default()
-	r.GET("/order/:id", func(c *gin.Context) {})
+	r.Use(func(c *gin.Context) {
+		c.Set("storage", storage)
+		c.Next()
+	})
+	r.GET("/order/:id", func(c *gin.Context) {
+		orderID := c.Param("id")
+		c.JSON(http.StatusOK, gin.H{
+			"order_id": orderID,
+			"message":  "", //TODO
+		})
+	})
 	srv := &http.Server{
 		Addr:    ":" + cfg.Server.Port,
 		Handler: r,

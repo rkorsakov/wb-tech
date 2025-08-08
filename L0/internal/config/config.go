@@ -5,8 +5,9 @@ import (
 )
 
 type Config struct {
-	Kafka  KafkaConfig  `yaml:"kafka"`
-	Server ServerConfig `yaml:"server"`
+	Kafka    KafkaConfig    `yaml:"kafka"`
+	Server   ServerConfig   `yaml:"server"`
+	Database DatabaseConfig `yaml:"database"`
 }
 
 type KafkaConfig struct {

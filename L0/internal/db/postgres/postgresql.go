@@ -103,3 +103,7 @@ func createTables(ctx context.Context, db *sql.DB) error {
 
 	return tx.Commit()
 }
+
+func (s *Storage) Close() error {
+	return s.db.Close()
+}
