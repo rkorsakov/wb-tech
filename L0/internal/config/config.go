@@ -19,6 +19,10 @@ type ServerConfig struct {
 	Port string `yaml:"port" env:"SERVER_PORT" env-default:":8080"`
 }
 
+type DatabaseConfig struct {
+	URL string `yaml:"url" env:"DATABASE_URL" env-default:"postgres://postgres:postgres@localhost/postgres?sslmode=disable"`
+}
+
 func LoadConfig(path string) (*Config, error) {
 	var cfg Config
 

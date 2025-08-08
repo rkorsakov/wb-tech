@@ -2,6 +2,7 @@ package main
 
 import (
 	"L0/internal/config"
+	"L0/internal/db/postgres"
 	"L0/internal/kafka"
 	"context"
 	"log"
@@ -21,6 +22,11 @@ func main() {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	storage, err := postgres.NewPostgresStorage(ctx, cfg.Database.URL)
+	if err != nil {
+		log.Fatalf("Failed to initialize storage: %v", err)
+	}
+	defer storage.Close()
 	kafkaConsumer := kafka.NewConsumer(cfg.Kafka.Brokers, cfg.Kafka.Topic, cfg.Kafka.GroupID)
 	defer func() {
 		if err := kafkaConsumer.Close(); err != nil {
