@@ -1,25 +1,24 @@
 package main
 
 import (
+	"L0/internal/config"
 	"L0/internal/kafka"
 	"context"
 	"github.com/gin-gonic/gin"
 	"log"
 )
 
+type Config struct {
+}
+
 func main() {
-	brokers := []string{"localhost:9092"}
-	topic := "test-topic"
-	groupID := "test-group"
+	cfg, err := config.LoadConfig("config/config.yml")
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	kafkaConsumer := kafka.NewConsumer(brokers, topic, groupID)
-	defer func(kafkaConsumer *kafka.Consumer) {
-		err := kafkaConsumer.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}(kafkaConsumer)
+	kafkaConsumer := kafka.NewConsumer(cfg.Kafka.Brokers, cfg.Kafka.Topic, cfg.Kafka.GroupID)
 	go func() {
 		if err := kafkaConsumer.Start(ctx); err != nil {
 			log.Printf("Kafka consumer error: %v", err)
@@ -27,5 +26,5 @@ func main() {
 		}
 	}()
 	r := gin.Default()
-	r.Run(":8080")
+	r.Run(cfg.Server.Port)
 }
