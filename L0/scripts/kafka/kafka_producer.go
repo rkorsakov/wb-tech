@@ -4,11 +4,10 @@ import (
 	"L0/internal/config"
 	"context"
 	"encoding/json"
+	"github.com/segmentio/kafka-go"
 	"log"
 	"os"
 	"path/filepath"
-
-	"github.com/segmentio/kafka-go"
 )
 
 func main() {
@@ -17,7 +16,7 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 	writer := &kafka.Writer{
-		Addr:     kafka.TCP("localhost:9092"),
+		Addr:     kafka.TCP(cfg.Kafka.Brokers...),
 		Topic:    cfg.Kafka.Topic,
 		Balancer: &kafka.LeastBytes{},
 	}
