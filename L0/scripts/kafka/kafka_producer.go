@@ -1,6 +1,7 @@
 package main
 
 import (
+	"L0/internal/config"
 	"context"
 	"encoding/json"
 	"log"
@@ -11,9 +12,13 @@ import (
 )
 
 func main() {
+	cfg, err := config.LoadConfig("configs/config.yaml")
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
 	writer := &kafka.Writer{
 		Addr:     kafka.TCP("localhost:9092"),
-		Topic:    "test-topic",
+		Topic:    cfg.Kafka.Topic,
 		Balancer: &kafka.LeastBytes{},
 	}
 	defer writer.Close()
@@ -44,5 +49,4 @@ func main() {
 		}
 		log.Printf("Successfully sent message from file: %s", file.Name())
 	}
-	log.Println("All files processed")
 }
