@@ -1,5 +1,9 @@
 SCRIPTS_DIR=scripts
 TESTDATA_DIR=testdata
+
+run:
+	@go run cmd/server/main.go
+
 gen_json:
 	@echo "Generating test JSON files..."
 	@go run $(SCRIPTS_DIR)/gen/generate_orders.go $(GEN_AMOUNT)

@@ -54,5 +54,6 @@ GET http://localhost:8081/order/<order_uid> должен вернуть JSON с 
 
 Примечание: переменная GEN_AMOUNT указывает сколько JSON нужно сгенерировать
 эту переменную использует команда gen-json, так что необходимо указывать
+`make run` - запускает сервис
 `make gen-json` - генерирует GEN_AMOUNT JSON и кладет их в testdata
 `make send-test` - генерирует JSON и отправляет их в топик
