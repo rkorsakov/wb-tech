@@ -57,10 +57,17 @@ func main() {
 		}
 	}()
 	go func() {
-		for msg := range kafkaConsumer.Messages {
-			err := handleMessage(&msg, storage)
-			if err != nil {
-				log.Printf("Failed to handle message: %v", err)
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case msg, ok := <-kafkaConsumer.Messages:
+				if !ok {
+					return
+				}
+				if err := handleMessage(&msg, storage); err != nil {
+					log.Printf("Failed to handle message: %v", err)
+				}
 			}
 		}
 	}()
