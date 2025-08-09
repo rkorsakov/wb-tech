@@ -3,18 +3,34 @@ package main
 import (
 	"L0/internal/config"
 	"L0/internal/db/postgres"
-	"L0/internal/kafka"
+	kfk "L0/internal/kafka"
+	"L0/internal/models"
 	"context"
+	"encoding/json"
+	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
+	"github.com/segmentio/kafka-go"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/gin-gonic/gin"
 )
+
+func handleMessage(m *kafka.Message, storage *postgres.Storage) error {
+	var order models.Order
+	err := json.Unmarshal(m.Value, &order)
+	if err != nil {
+		return err
+	}
+	ctx := context.Background()
+	err = storage.SaveOrder(ctx, order)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 func main() {
 	cfg, err := config.LoadConfig("configs/config.yaml")
@@ -28,7 +44,7 @@ func main() {
 		log.Fatalf("Failed to initialize storage: %v", err)
 	}
 	defer storage.Close()
-	kafkaConsumer := kafka.NewConsumer(cfg.Kafka.Brokers, cfg.Kafka.Topic, cfg.Kafka.GroupID)
+	kafkaConsumer := kfk.NewConsumer(cfg.Kafka.Brokers, cfg.Kafka.Topic, cfg.Kafka.GroupID)
 	defer func() {
 		if err := kafkaConsumer.Close(); err != nil {
 			log.Printf("Failed to close Kafka consumer: %v", err)
@@ -40,6 +56,14 @@ func main() {
 			cancel()
 		}
 	}()
+	go func() {
+		for msg := range kafkaConsumer.Messages {
+			err := handleMessage(&msg, storage)
+			if err != nil {
+				log.Printf("Failed to handle message: %v", err)
+			}
+		}
+	}()
 	r := gin.Default()
 	r.Use(func(c *gin.Context) {
 		c.Set("storage", storage)
@@ -47,10 +71,13 @@ func main() {
 	})
 	r.GET("/order/:id", func(c *gin.Context) {
 		orderID := c.Param("id")
-		c.JSON(http.StatusOK, gin.H{
-			"order_id": orderID,
-			"message":  "", //TODO
-		})
+		ctx := c.Request.Context()
+		order, err := storage.GetOrder(ctx, orderID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, order)
 	})
 	srv := &http.Server{
 		Addr:    ":" + cfg.Server.Port,
