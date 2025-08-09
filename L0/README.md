@@ -48,10 +48,11 @@ GET http://localhost:8081/order/<order_uid> должен вернуть JSON с 
     - Endpoint `/order/:id`
       - Отдает JSON по id заказа
 5. Кэширование //TODO
+6. Вэб-интерфейс //TODO
 
 # Make команды
 
 Примечание: переменная GEN_AMOUNT указывает сколько JSON нужно сгенерировать
 эту переменную использует команда gen-json, так что необходимо указывать
 `make gen-json` - генерирует GEN_AMOUNT JSON и кладет их в testdata
-`make send-test` - генерирует JSON и отправляет их в кафку
+`make send-test` - генерирует JSON и отправляет их в топик
