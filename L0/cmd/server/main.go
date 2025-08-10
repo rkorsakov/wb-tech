@@ -65,7 +65,7 @@ func main() {
 			}
 		}
 	}()
-	srv := server.NewServer(cfg, storage)
+	srv := server.NewServer(cfg, storage, orderCache)
 	go func() {
 		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, syscall.SIGINT, syscall.SIGTERM)

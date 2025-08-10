@@ -1,6 +1,7 @@
 package server
 
 import (
+	"L0/internal/cache"
 	"L0/internal/config"
 	"L0/internal/db/postgres"
 	"L0/internal/handlers"
@@ -14,15 +15,14 @@ type Server struct {
 	storage    *postgres.Storage
 }
 
-func NewServer(cfg *config.Config, storage *postgres.Storage) *Server {
+func NewServer(cfg *config.Config, storage *postgres.Storage, orderCache *cache.OrderCache) *Server {
 	router := gin.Default()
 	router.LoadHTMLGlob("web/templates/*")
 
-	orderHandler := handlers.NewOrderHandler(storage)
+	orderHandler := handlers.NewOrderHandler(storage, orderCache)
 
 	router.GET("/order/:id", orderHandler.GetOrder)
 	router.GET("/", orderHandler.IndexPage)
-	router.POST("/search", orderHandler.SearchOrder)
 
 	return &Server{
 		httpServer: &http.Server{

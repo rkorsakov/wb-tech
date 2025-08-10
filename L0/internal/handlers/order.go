@@ -3,7 +3,6 @@ package handlers
 import (
 	"L0/internal/cache"
 	"L0/internal/db/postgres"
-	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -13,8 +12,8 @@ type OrderHandler struct {
 	orderCache *cache.OrderCache
 }
 
-func NewOrderHandler(storage *postgres.Storage) *OrderHandler {
-	return &OrderHandler{storage: storage}
+func NewOrderHandler(storage *postgres.Storage, orderCache *cache.OrderCache) *OrderHandler {
+	return &OrderHandler{storage: storage, orderCache: orderCache}
 }
 
 func (h *OrderHandler) GetOrder(c *gin.Context) {
@@ -35,25 +34,5 @@ func (h *OrderHandler) GetOrder(c *gin.Context) {
 func (h *OrderHandler) IndexPage(c *gin.Context) {
 	c.HTML(http.StatusOK, "index.html", gin.H{
 		"Title": "Просмотр заказов",
-	})
-}
-
-func (h *OrderHandler) SearchOrder(c *gin.Context) {
-	orderID := c.PostForm("order_id")
-	ctx := c.Request.Context()
-	order, err := h.storage.GetOrder(ctx, orderID)
-	if err != nil {
-		c.HTML(http.StatusOK, "index.html", gin.H{
-			"Title":   "Просмотр заказов",
-			"Error":   "Не удалось найти заказ: " + err.Error(),
-			"OrderID": orderID,
-		})
-		return
-	}
-	prettyJSON, _ := json.MarshalIndent(order, "", "    ")
-	c.HTML(http.StatusOK, "index.html", gin.H{
-		"Title":   "Просмотр заказов",
-		"Order":   string(prettyJSON),
-		"OrderID": orderID,
 	})
 }

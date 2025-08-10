@@ -3,85 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ .Title }}</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        .search-box {
-            display: flex;
-            margin: 20px 0;
-        }
-        #order_id {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px 0 0 4px;
-            font-size: 16px;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 0 4px 4px 0;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .result {
-            background-color: #f8f8f8;
-            padding: 15px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            max-height: 500px;
-            overflow-y: auto;
-        }
-        .error {
-            color: #d9534f;
-            margin-top: 10px;
-        }
-    </style>
+    <title>Просмотр заказов</title>
 </head>
 <body>
-<div class="container">
-    <h1>{{ .Title }}</h1>
+<h1>Просмотр заказов</h1>
 
-    <form method="POST" action="/search">
-        <div class="search-box">
-            <input type="text" id="order_id" name="order_id"
-                   placeholder="Введите ID заказа" value="{{ .OrderID }}">
-            <button type="submit">Поиск</button>
-        </div>
-    </form>
-
-    {{ if .Error }}
-    <div class="error">{{ .Error }}</div>
-    {{ end }}
-
-    {{ if .Order }}
-    <h2>Результат для заказа {{ .OrderID }}</h2>
-    <div class="result">{{ .Order }}</div>
-    {{ end }}
+<div>
+    <input type="text" id="orderId" placeholder="Введите ID заказа">
+    <button onclick="getOrder()">Найти</button>
 </div>
+
+<div id="loading" style="display: none;">
+    Загрузка...
+</div>
+
+<div id="error" style="display: none; color: red;"></div>
+
+<div id="orderResult" style="display: none;">
+    <h2>Информация о заказе</h2>
+    <pre id="orderData"></pre>
+</div>
+
+<script>
+    function getOrder() {
+        const orderId = document.getElementById('orderId').value.trim();
+        if (!orderId) {
+            showError('Введите ID заказа');
+            return;
+        }
+
+        showLoading();
+        hideError();
+        hideResult();
+
+        fetch(`/order/${orderId}`)
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(text || `Ошибка ${response.status}: ${response.statusText}`);
+                    });
+                }
+                return response.json().catch(() => {
+                    return response.text();
+                });
+            })
+            .then(data => {
+                hideLoading();
+                if (typeof data === 'string') {
+                    showResult(data);
+                } else {
+                    showResult(JSON.stringify(data, null, 2));
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                showError(error.message);
+            });
+    }
+
+    function showLoading() {
+        document.getElementById('loading').style.display = 'block';
+    }
+
+    function hideLoading() {
+        document.getElementById('loading').style.display = 'none';
+    }
+
+    function showError(message) {
+        const errorDiv = document.getElementById('error');
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+    }
+
+    function hideError() {
+        document.getElementById('error').style.display = 'none';
+    }
+
+    function showResult(data) {
+        document.getElementById('orderData').textContent = data;
+        document.getElementById('orderResult').style.display = 'block';
+    }
+
+    function hideResult() {
+        document.getElementById('orderResult').style.display = 'none';
+    }
+</script>
 </body>
 </html>
