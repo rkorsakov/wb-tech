@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"L0/internal/cache"
 	"L0/internal/db/postgres"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
@@ -8,7 +9,8 @@ import (
 )
 
 type OrderHandler struct {
-	storage *postgres.Storage
+	storage    *postgres.Storage
+	orderCache *cache.OrderCache
 }
 
 func NewOrderHandler(storage *postgres.Storage) *OrderHandler {
@@ -18,9 +20,13 @@ func NewOrderHandler(storage *postgres.Storage) *OrderHandler {
 func (h *OrderHandler) GetOrder(c *gin.Context) {
 	orderID := c.Param("id")
 	ctx := c.Request.Context()
+	if cachedOrder, ok := h.orderCache.Get(orderID); ok {
+		c.JSON(http.StatusOK, cachedOrder)
+		return
+	}
 	order, err := h.storage.GetOrder(ctx, orderID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get order: " + err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, order)
