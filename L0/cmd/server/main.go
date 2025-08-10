@@ -4,13 +4,10 @@ import (
 	"L0/internal/config"
 	"L0/internal/db/postgres"
 	kfk "L0/internal/kafka"
-	"L0/internal/models"
 	"L0/internal/server"
 	"context"
-	"encoding/json"
 	"errors"
 	_ "github.com/lib/pq"
-	"github.com/segmentio/kafka-go"
 	"log"
 	"net/http"
 	"os"
@@ -18,20 +15,6 @@ import (
 	"syscall"
 	"time"
 )
-
-func handleMessage(m *kafka.Message, storage *postgres.Storage) error {
-	var order models.Order
-	err := json.Unmarshal(m.Value, &order)
-	if err != nil {
-		return err
-	}
-	ctx := context.Background()
-	err = storage.SaveOrder(ctx, order)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
 func main() {
 	cfg, err := config.LoadConfig("configs/config.yaml")
@@ -57,6 +40,7 @@ func main() {
 			cancel()
 		}
 	}()
+	messageHandler := kfk.NewMessageHandler(storage)
 	go func() {
 		for {
 			select {
@@ -66,7 +50,7 @@ func main() {
 				if !ok {
 					return
 				}
-				if err := handleMessage(&msg, storage); err != nil {
+				if err := messageHandler.HandleMessage(&msg); err != nil {
 					log.Printf("Failed to handle message: %v", err)
 				}
 			}
