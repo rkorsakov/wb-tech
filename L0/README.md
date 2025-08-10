@@ -48,7 +48,9 @@ GET http://localhost:8081/order/<order_uid> должен вернуть JSON с 
     - Endpoint `/order/:id`
       - Отдает JSON по id заказа
 5. Кэширование //TODO
-6. Вэб-интерфейс //TODO
+6. Вэб-интерфейс
+    - `GET /` страница с search box для поиска заказов
+    - `POST /search` ввод ID заказа для получения JSON
 
 # Make команды
 
