@@ -5,9 +5,10 @@ import (
 	"L0/internal/db/postgres"
 	kfk "L0/internal/kafka"
 	"L0/internal/models"
+	"L0/internal/server"
 	"context"
 	"encoding/json"
-	"github.com/gin-gonic/gin"
+	"errors"
 	_ "github.com/lib/pq"
 	"github.com/segmentio/kafka-go"
 	"log"
@@ -71,52 +72,7 @@ func main() {
 			}
 		}
 	}()
-	r := gin.Default()
-	r.LoadHTMLGlob("web/templates/*")
-	r.Use(func(c *gin.Context) {
-		c.Set("storage", storage)
-		c.Next()
-	})
-	r.GET("/order/:id", func(c *gin.Context) {
-		orderID := c.Param("id")
-		ctx := c.Request.Context()
-		order, err := storage.GetOrder(ctx, orderID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, order)
-	})
-
-	r.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", gin.H{
-			"Title": "Просмотр заказов",
-		})
-	})
-
-	r.POST("/search", func(c *gin.Context) {
-		orderID := c.PostForm("order_id")
-		ctx := c.Request.Context()
-		order, err := storage.GetOrder(ctx, orderID)
-		if err != nil {
-			c.HTML(http.StatusOK, "index.html", gin.H{
-				"Title":   "Просмотр заказов",
-				"Error":   "Не удалось найти заказ: " + err.Error(),
-				"OrderID": orderID,
-			})
-			return
-		}
-		prettyJSON, _ := json.MarshalIndent(order, "", "    ")
-		c.HTML(http.StatusOK, "index.html", gin.H{
-			"Title":   "Просмотр заказов",
-			"Order":   string(prettyJSON),
-			"OrderID": orderID,
-		})
-	})
-	srv := &http.Server{
-		Addr:    ":" + cfg.Server.Port,
-		Handler: r,
-	}
+	srv := server.NewServer(cfg, storage)
 	go func() {
 		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, syscall.SIGINT, syscall.SIGTERM)
@@ -130,7 +86,7 @@ func main() {
 		cancel()
 	}()
 	log.Printf("Starting server on port %s", cfg.Server.Port)
-	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	if err := srv.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("HTTP server error: %v", err)
 	}
 	log.Println("Server stopped")
