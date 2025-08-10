@@ -61,6 +61,7 @@ func main() {
   "date_created": "2021-11-26T06:22:19Z",
   "oof_shard": "1"
 }`
+	os.Mkdir("testdata", 0755)
 	amountToGen, _ := strconv.Atoi(os.Args[1])
 	for i := 0; i < amountToGen; i++ {
 		var order models.Order
