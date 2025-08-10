@@ -59,7 +59,7 @@ func main() {
 				if !ok {
 					return
 				}
-				if err := messageHandler.HandleMessage(&msg); err != nil {
+				if err := messageHandler.HandleMessage(orderCache, &msg); err != nil {
 					log.Printf("Failed to handle message: %v", err)
 				}
 			}
