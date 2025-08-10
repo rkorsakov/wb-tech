@@ -72,6 +72,7 @@ func main() {
 		}
 	}()
 	r := gin.Default()
+	r.LoadHTMLGlob("web/templates/*")
 	r.Use(func(c *gin.Context) {
 		c.Set("storage", storage)
 		c.Next()
@@ -85,6 +86,32 @@ func main() {
 			return
 		}
 		c.JSON(http.StatusOK, order)
+	})
+
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"Title": "Просмотр заказов",
+		})
+	})
+
+	r.POST("/search", func(c *gin.Context) {
+		orderID := c.PostForm("order_id")
+		ctx := c.Request.Context()
+		order, err := storage.GetOrder(ctx, orderID)
+		if err != nil {
+			c.HTML(http.StatusOK, "index.html", gin.H{
+				"Title":   "Просмотр заказов",
+				"Error":   "Не удалось найти заказ: " + err.Error(),
+				"OrderID": orderID,
+			})
+			return
+		}
+		prettyJSON, _ := json.MarshalIndent(order, "", "    ")
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"Title":   "Просмотр заказов",
+			"Order":   string(prettyJSON),
+			"OrderID": orderID,
+		})
 	})
 	srv := &http.Server{
 		Addr:    ":" + cfg.Server.Port,
@@ -106,6 +133,5 @@ func main() {
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("HTTP server error: %v", err)
 	}
-
 	log.Println("Server stopped")
 }
