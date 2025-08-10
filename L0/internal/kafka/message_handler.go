@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"L0/internal/cache"
 	"L0/internal/db/postgres"
 	"L0/internal/models"
 	"context"
@@ -16,7 +17,7 @@ func NewMessageHandler(storage *postgres.Storage) *MessageHandler {
 	return &MessageHandler{storage: storage}
 }
 
-func (handler *MessageHandler) HandleMessage(m *kafka.Message) error {
+func (handler *MessageHandler) HandleMessage(orderCache *cache.OrderCache, m *kafka.Message) error {
 	var order models.Order
 	err := json.Unmarshal(m.Value, &order)
 	if err != nil {
@@ -27,5 +28,6 @@ func (handler *MessageHandler) HandleMessage(m *kafka.Message) error {
 	if err != nil {
 		return err
 	}
+	orderCache.Set(order.OrderUID, order)
 	return nil
 }

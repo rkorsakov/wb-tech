@@ -20,11 +20,6 @@ func NewServer(cfg *config.Config, storage *postgres.Storage) *Server {
 
 	orderHandler := handlers.NewOrderHandler(storage)
 
-	router.Use(func(c *gin.Context) {
-		c.Set("storage", storage)
-		c.Next()
-	})
-
 	router.GET("/order/:id", orderHandler.GetOrder)
 	router.GET("/", orderHandler.IndexPage)
 	router.POST("/search", orderHandler.SearchOrder)

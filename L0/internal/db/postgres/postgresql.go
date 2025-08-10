@@ -14,7 +14,7 @@ type Storage struct {
 	db *sql.DB
 }
 
-func NewPostgresStorage(ctx context.Context, connString string) (*Storage, error) {
+func NewPostgresStorage(connString string) (*Storage, error) {
 	db, err := sql.Open("postgres", connString)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to database: %v", err)
@@ -262,6 +262,155 @@ func (s *Storage) GetOrder(ctx context.Context, orderUID string) (*models.Order,
 	}
 	order.Items = items
 	return &order, nil
+}
+
+func (s *Storage) GetAllOrders(ctx context.Context) ([]models.Order, error) {
+	// Get all orders
+	orderRows, err := s.db.QueryContext(ctx, `
+        SELECT 
+            order_uid, track_number, entry, locale, internal_signature,
+            customer_id, delivery_service, shardkey, sm_id, date_created, oof_shard
+        FROM orders`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get orders: %w", err)
+	}
+	defer orderRows.Close()
+
+	var orders []models.Order
+	ordersMap := make(map[string]*models.Order)
+
+	for orderRows.Next() {
+		var order models.Order
+		err := orderRows.Scan(
+			&order.OrderUID,
+			&order.TrackNumber,
+			&order.Entry,
+			&order.Locale,
+			&order.InternalSignature,
+			&order.CustomerID,
+			&order.DeliveryService,
+			&order.ShardKey,
+			&order.SmID,
+			&order.DateCreated,
+			&order.OofShard)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan order: %w", err)
+		}
+		orders = append(orders, order)
+		ordersMap[order.OrderUID] = &orders[len(orders)-1]
+	}
+
+	if err = orderRows.Err(); err != nil {
+		return nil, fmt.Errorf("error after scanning orders: %w", err)
+	}
+
+	deliveryRows, err := s.db.QueryContext(ctx, `
+        SELECT 
+            order_uid, name, phone, zip, city, address, region, email
+        FROM deliveries`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get deliveries: %w", err)
+	}
+	defer deliveryRows.Close()
+
+	for deliveryRows.Next() {
+		var delivery models.Delivery
+		var orderUID string
+		err := deliveryRows.Scan(
+			&orderUID,
+			&delivery.Name,
+			&delivery.Phone,
+			&delivery.Zip,
+			&delivery.City,
+			&delivery.Address,
+			&delivery.Region,
+			&delivery.Email)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan delivery: %w", err)
+		}
+		if order, exists := ordersMap[orderUID]; exists {
+			order.Delivery = delivery
+		}
+	}
+
+	if err = deliveryRows.Err(); err != nil {
+		return nil, fmt.Errorf("error after scanning deliveries: %w", err)
+	}
+
+	paymentRows, err := s.db.QueryContext(ctx, `
+        SELECT 
+            order_uid, transaction, request_id, currency, provider,
+            amount, payment_dt, bank, delivery_cost, goods_total, custom_fee
+        FROM payments`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get payments: %w", err)
+	}
+	defer paymentRows.Close()
+
+	for paymentRows.Next() {
+		var payment models.Payment
+		var orderUID string
+		err := paymentRows.Scan(
+			&orderUID,
+			&payment.Transaction,
+			&payment.RequestID,
+			&payment.Currency,
+			&payment.Provider,
+			&payment.Amount,
+			&payment.PaymentDt,
+			&payment.Bank,
+			&payment.DeliveryCost,
+			&payment.GoodsTotal,
+			&payment.CustomFee)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan payment: %w", err)
+		}
+		if order, exists := ordersMap[orderUID]; exists {
+			order.Payment = payment
+		}
+	}
+
+	if err = paymentRows.Err(); err != nil {
+		return nil, fmt.Errorf("error after scanning payments: %w", err)
+	}
+
+	itemRows, err := s.db.QueryContext(ctx, `
+        SELECT 
+            order_uid, chrt_id, track_number, price, rid, name,
+            sale, size, total_price, nm_id, brand, status
+        FROM items
+        ORDER BY order_uid`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get items: %w", err)
+	}
+	defer itemRows.Close()
+	for itemRows.Next() {
+		var item models.Item
+		var orderUID string
+		err := itemRows.Scan(
+			&orderUID,
+			&item.ChrtID,
+			&item.TrackNumber,
+			&item.Price,
+			&item.RID,
+			&item.Name,
+			&item.Sale,
+			&item.Size,
+			&item.TotalPrice,
+			&item.NmID,
+			&item.Brand,
+			&item.Status)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan item: %w", err)
+		}
+		if order, exists := ordersMap[orderUID]; exists {
+			order.Items = append(order.Items, item)
+		}
+	}
+	if err = itemRows.Err(); err != nil {
+		return nil, fmt.Errorf("error after scanning items: %w", err)
+	}
+	return orders, nil
 }
 
 func (s *Storage) Close() error {

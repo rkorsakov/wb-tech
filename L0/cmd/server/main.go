@@ -1,6 +1,7 @@
 package main
 
 import (
+	"L0/internal/cache"
 	"L0/internal/config"
 	"L0/internal/db/postgres"
 	kfk "L0/internal/kafka"
@@ -23,11 +24,19 @@ func main() {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	storage, err := postgres.NewPostgresStorage(ctx, cfg.Database.URL)
+	storage, err := postgres.NewPostgresStorage(cfg.Database.URL)
 	if err != nil {
 		log.Fatalf("Failed to initialize storage: %v", err)
 	}
 	defer storage.Close()
+	orderCache := cache.New()
+	orders, err := storage.GetAllOrders(ctx)
+	if err != nil {
+		log.Fatalf("Failed to get all orders: %v", err)
+	}
+	for _, order := range orders {
+		orderCache.Set(order.OrderUID, order)
+	}
 	kafkaConsumer := kfk.NewConsumer(cfg.Kafka.Brokers, cfg.Kafka.Topic, cfg.Kafka.GroupID)
 	defer func() {
 		if err := kafkaConsumer.Close(); err != nil {
