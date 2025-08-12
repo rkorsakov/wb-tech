@@ -8,11 +8,15 @@ import (
 	"L0/internal/server"
 	"context"
 	"errors"
+	"fmt"
 	_ "github.com/lib/pq"
+	"github.com/segmentio/kafka-go"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 )
@@ -21,6 +25,9 @@ func main() {
 	cfg, err := config.LoadConfig("configs/config.yaml")
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
+	}
+	if err := createTopicManually(cfg.Kafka.Topic, cfg.Kafka.Brokers); err != nil {
+		log.Printf("Warning: failed to create topic: %v", err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -83,4 +90,39 @@ func main() {
 		log.Fatalf("HTTP server error: %v", err)
 	}
 	log.Println("Server stopped")
+}
+
+func createTopicManually(topic string, brokers []string) error {
+	conn, err := kafka.Dial("tcp", brokers[0])
+	if err != nil {
+		return fmt.Errorf("failed to dial broker: %w", err)
+	}
+	defer conn.Close()
+
+	controller, err := conn.Controller()
+	if err != nil {
+		return fmt.Errorf("failed to get controller: %w", err)
+	}
+
+	controllerConn, err := kafka.Dial("tcp",
+		net.JoinHostPort(controller.Host, strconv.Itoa(controller.Port)))
+	if err != nil {
+		return fmt.Errorf("failed to dial controller: %w", err)
+	}
+	defer controllerConn.Close()
+
+	topicConfigs := []kafka.TopicConfig{
+		{
+			Topic:             topic,
+			NumPartitions:     1,
+			ReplicationFactor: 1,
+		},
+	}
+
+	err = controllerConn.CreateTopics(topicConfigs...)
+	if err != nil {
+		return fmt.Errorf("failed to create topic: %w", err)
+	}
+
+	return nil
 }

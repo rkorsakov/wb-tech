@@ -16,7 +16,7 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 	writer := &kafka.Writer{
-		Addr:     kafka.TCP(cfg.Kafka.Brokers...),
+		Addr:     kafka.TCP("localhost:9094"),
 		Topic:    cfg.Kafka.Topic,
 		Balancer: &kafka.LeastBytes{},
 	}
