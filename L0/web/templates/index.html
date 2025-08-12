@@ -56,7 +56,7 @@
     }
 
     function showOrder(order) {
-        let html = `
+        document.getElementById('orderData').innerHTML = `
             <h3>Основная информация</h3>
             <p><strong>ID заказа:</strong> ${order.order_uid || '-'}</p>
             <p><strong>Трек-номер:</strong> ${order.track_number || '-'}</p>
@@ -100,8 +100,6 @@
                 </table>
             ` : '<p>Нет товаров</p>'}
         `;
-
-        document.getElementById('orderData').innerHTML = html;
         document.getElementById('orderResult').style.display = 'block';
     }
 
