@@ -73,3 +73,6 @@ GET http://localhost:8081/order/<order_uid> должен вернуть JSON с 
 - `make gen-json` - генерация GEN_AMOUNT JSON и кладет их в testdata
 - `make send-random-testdada` - генерация JSON и их отправка в топик
 - `make send-testdata` - отправка JSON из testdata в топик
+
+# Демонстрация работы
+https://cloud.mail.ru/public/mipR/zSxzHM3R1
