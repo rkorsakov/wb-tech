@@ -36,7 +36,7 @@ func main() {
 		log.Fatalf("Failed to initialize storage: %v", err)
 	}
 	defer storage.Close()
-	orderCache := cache.New()
+	orderCache := cache.New(cfg.Cache.Capacity)
 	orders, err := storage.GetAllOrders(ctx)
 	if err != nil {
 		log.Fatalf("Failed to get all orders: %v", err)

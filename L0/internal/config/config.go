@@ -8,6 +8,7 @@ type Config struct {
 	Kafka    KafkaConfig    `yaml:"kafka"`
 	Server   ServerConfig   `yaml:"server"`
 	Database DatabaseConfig `yaml:"database"`
+	Cache    CacheConfig    `yaml:"cache"`
 }
 
 type KafkaConfig struct {
@@ -22,6 +23,10 @@ type ServerConfig struct {
 
 type DatabaseConfig struct {
 	URL string `yaml:"url" env:"DATABASE_URL" env-default:"postgres://postgres:postgres@localhost/postgres?sslmode=disable"`
+}
+
+type CacheConfig struct {
+	Capacity int `yaml:"capacity" env:"CACHE_CAPACITY" env-default:"1000"`
 }
 
 func LoadConfig(path string) (*Config, error) {

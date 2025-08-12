@@ -9,3 +9,6 @@ database:
 
 server:
   port: "8080"
+
+cache:
+  capacity: 50
