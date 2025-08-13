@@ -19,7 +19,7 @@ WORKDIR /app
 
 COPY --from=builder /app/bin/main .
 
-COPY configs/config.yaml ./configs/
+COPY configs ./configs/
 
 COPY migrations ./migrations
 
