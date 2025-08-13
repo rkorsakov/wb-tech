@@ -2,7 +2,13 @@ SCRIPTS_DIR=scripts
 TESTDATA_DIR=testdata
 GEN_AMOUNT ?= 10
 
+include .env
+export $(shell sed 's/=.*//' .env)
+
+.PHONY: up down gen_json send_random_testdata send_testdata
+
 up:
+	@echo "Starting containers with config: $(CONFIG_PATH)"
 	@docker-compose up -d
 
 down:
@@ -16,10 +22,10 @@ gen_json:
 
 send_random_testdata: gen_json
 	@echo "Sending test data to Kafka..."
-	@go run $(SCRIPTS_DIR)/kafka/kafka_producer.go
+	@go run $(SCRIPTS_DIR)/kafka/kafka_producer.go CONFIG_PATH=$(CONFIG_PATH)
 	@echo "Test data sent to Kafka"
 
 send_testdata:
 	@echo "Sending test data to Kafka..."
-	@go run $(SCRIPTS_DIR)/kafka/kafka_producer.go
+	@go run $(SCRIPTS_DIR)/kafka/kafka_producer.go CONFIG_PATH=$(CONFIG_PATH)
 	@echo "Test data sent to Kafka"
