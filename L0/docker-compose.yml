@@ -7,6 +7,9 @@ services:
       - .env
     environment:
       - CONFIG_PATH=${CONFIG_PATH}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     depends_on:
       db:
         condition: service_started
@@ -44,9 +47,9 @@ services:
     image: postgres:17-alpine
     container_name: db
     environment:
-      - POSTGRES_USER=orders_user
-      - POSTGRES_PASSWORD=12345
-      - POSTGRES_DB=orders_db
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:

@@ -4,9 +4,6 @@ kafka:
   topic: "orders"
   groupID: "order-service"
 
-database:
-  url: "postgres://username:password@localhost:5432/dbname?sslmode=disable"
-
 server:
   port: "8080"
 

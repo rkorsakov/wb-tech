@@ -5,10 +5,9 @@ import (
 )
 
 type Config struct {
-	Kafka    KafkaConfig    `yaml:"kafka"`
-	Server   ServerConfig   `yaml:"server"`
-	Database DatabaseConfig `yaml:"database"`
-	Cache    CacheConfig    `yaml:"cache"`
+	Kafka  KafkaConfig  `yaml:"kafka"`
+	Server ServerConfig `yaml:"server"`
+	Cache  CacheConfig  `yaml:"cache"`
 }
 
 type KafkaConfig struct {
@@ -19,10 +18,6 @@ type KafkaConfig struct {
 
 type ServerConfig struct {
 	Port string `yaml:"port" env:"SERVER_PORT" env-default:":8080"`
-}
-
-type DatabaseConfig struct {
-	URL string `yaml:"url" env:"DATABASE_URL" env-default:"postgres://postgres:postgres@localhost/postgres?sslmode=disable"`
 }
 
 type CacheConfig struct {

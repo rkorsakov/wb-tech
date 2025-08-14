@@ -7,8 +7,5 @@ kafka:
 server:
   port: "8080"
 
-database:
-  url: "postgres://orders_user:12345@db:5432/orders_db?sslmode=disable"
-
 cache:
   capacity: 5

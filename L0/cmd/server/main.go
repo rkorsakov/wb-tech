@@ -24,7 +24,7 @@ import (
 func main() {
 	configPath := os.Getenv("CONFIG_PATH")
 	if configPath == "" {
-		configPath = "configs/config.yaml"
+		log.Print("CONFIG_PATH env variable not set")
 	}
 	cfg, err := config.LoadConfig(configPath)
 	if err != nil {
@@ -35,7 +35,11 @@ func main() {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	storage, err := postgres.NewPostgresStorage(cfg.Database.URL)
+	databaseURL, err := buildDBUrl()
+	if err != nil {
+		log.Fatalf("Failed to build database URL: %v", err)
+	}
+	storage, err := postgres.NewPostgresStorage(databaseURL)
 	if err != nil {
 		log.Fatalf("Failed to initialize storage: %v", err)
 	}
@@ -129,4 +133,14 @@ func createTopicManually(topic string, brokers []string) error {
 	}
 
 	return nil
+}
+
+func buildDBUrl() (string, error) {
+	user := os.Getenv("POSTGRES_USER")
+	password := os.Getenv("POSTGRES_PASSWORD")
+	db := os.Getenv("POSTGRES_DB")
+	if user == "" || password == "" || db == "" {
+		return "", fmt.Errorf("set up all of the DB env variables")
+	}
+	return "postgres://" + user + ":" + password + "@db:5432/" + db + "?sslmode=disable", nil
 }
