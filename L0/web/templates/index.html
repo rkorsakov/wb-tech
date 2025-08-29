@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Просмотр заказов</title>
+</head>
+<body>
+<h1>Просмотр заказов</h1>
+
+<div>
+    <input type="text" id="orderId" placeholder="Введите ID заказа">
+    <button onclick="getOrder()">Найти</button>
+</div>
+
+<div id="loading" style="display: none;">
+    Загрузка...
+</div>
+
+<div id="error" style="display: none; color: red;"></div>
+
+<div id="orderResult" style="display: none;">
+    <h2>Информация о заказе</h2>
+    <div id="orderData"></div>
+</div>
+
+<script>
+    function getOrder() {
+        const orderId = document.getElementById('orderId').value.trim();
+        if (!orderId) {
+            showError('Введите ID заказа');
+            return;
+        }
+
+        showLoading();
+        hideError();
+        hideResult();
+
+        fetch(`/order/${orderId}`)
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(text || `Ошибка ${response.status}: ${response.statusText}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(order => {
+                hideLoading();
+                showOrder(order);
+            })
+            .catch(error => {
+                hideLoading();
+                showError(error.message);
+            });
+    }
+
+    function showOrder(order) {
+        document.getElementById('orderData').innerHTML = `
+            <h3>Основная информация</h3>
+            <p><strong>ID заказа:</strong> ${order.order_uid || '-'}</p>
+            <p><strong>Трек-номер:</strong> ${order.track_number || '-'}</p>
+            <p><strong>Сервис доставки:</strong> ${order.delivery_service || '-'}</p>
+            <p><strong>Дата создания:</strong> ${order.date_created || '-'}</p>
+
+            <h3>Доставка</h3>
+            <p><strong>Имя:</strong> ${order.delivery?.name || '-'}</p>
+            <p><strong>Телефон:</strong> ${order.delivery?.phone || '-'}</p>
+            <p><strong>Адрес:</strong> ${order.delivery?.zip || ''}, ${order.delivery?.city || ''}, ${order.delivery?.address || ''}, ${order.delivery?.region || ''}</p>
+            <p><strong>Email:</strong> ${order.delivery?.email || '-'}</p>
+
+            <h3>Оплата</h3>
+            <p><strong>Транзакция:</strong> ${order.payment?.transaction || '-'}</p>
+            <p><strong>Сумма:</strong> ${order.payment?.amount || 0} ${order.payment?.currency || ''}</p>
+            <p><strong>Доставка:</strong> ${order.payment?.delivery_cost || 0}</p>
+            <p><strong>Товары на сумму:</strong> ${order.payment?.goods_total || 0}</p>
+            <p><strong>Банк:</strong> ${order.payment?.bank || '-'}</p>
+
+            <h3>Товары</h3>
+            ${Array.isArray(order.items) && order.items.length > 0 ? `
+                <table border="1" cellpadding="5" cellspacing="0">
+                    <tr>
+                        <th>Название</th>
+                        <th>Бренд</th>
+                        <th>Цена</th>
+                        <th>Скидка</th>
+                        <th>Итоговая цена</th>
+                        <th>Размер</th>
+                    </tr>
+                    ${order.items.map(item => `
+                        <tr>
+                            <td>${item.name || '-'}</td>
+                            <td>${item.brand || '-'}</td>
+                            <td>${item.price || 0}</td>
+                            <td>${item.sale || 0}%</td>
+                            <td>${item.total_price || 0}</td>
+                            <td>${item.size || '-'}</td>
+                        </tr>
+                    `).join('')}
+                </table>
+            ` : '<p>Нет товаров</p>'}
+        `;
+        document.getElementById('orderResult').style.display = 'block';
+    }
+
+    function showLoading() {
+        document.getElementById('loading').style.display = 'block';
+    }
+
+    function hideLoading() {
+        document.getElementById('loading').style.display = 'none';
+    }
+
+    function showError(message) {
+        const errorDiv = document.getElementById('error');
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+    }
+
+    function hideError() {
+        document.getElementById('error').style.display = 'none';
+    }
+
+    function hideResult() {
+        document.getElementById('orderResult').style.display = 'none';
+    }
+</script>
+</body>
+</html>
