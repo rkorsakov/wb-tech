@@ -1,4 +1,4 @@
-module ntpcustom
+module ntp-time
 
 go 1.24
 
