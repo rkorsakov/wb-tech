@@ -1,0 +1,15 @@
+project	a	15
+zebra	a	2
+algorithm	b	3
+test	c	5
+data	g	12
+sort	a	212
+file	v	23
+system	d	2
+process	e	51
+zebra	a	123
+algorithm	v	0
+code	l	42
+binary	n	123
+apple	e	421
+test	k	67653
