@@ -1,0 +1,10 @@
+The quick brown fox jumps over the lazy dog.
+Hello world! This is a test file for grep functionality.
+Programming in Go is fun and efficient.
+HELLO there! This line has hello in different case.
+The quick brown fox jumps again.
+Another line with Hello at the beginning.
+This line has no matching patterns.
+Go is statically typed and compiled.
+hello world in lowercase.
+The End.
