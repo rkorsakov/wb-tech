@@ -1,0 +1,7 @@
+Name	Age	City	Salary
+Ivan	25	Moscow	50000
+Maria	30	SPb	60000
+Petr	35	Moscow	55000
+Anna	28	Kazan	45000
+Dmitry	40	SPb	70000
+Elena	22	Moscow	48000
