@@ -46,7 +46,7 @@ func (shell *Shell) handleEchoCommand(args []string) {
 }
 
 func (shell *Shell) handlePsCommand() {
-	cmd := exec.Command("ps", "aux")
+	cmd := exec.Command("ps")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 

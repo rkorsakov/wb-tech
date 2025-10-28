@@ -27,14 +27,12 @@ func NewShell() *Shell {
 func (shell *Shell) Start() {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
-
 	go func() {
 		for {
 			sig := <-signalChan
 			switch sig {
 			case os.Interrupt:
 				if shell.currentCmd != nil && shell.currentCmd.Process != nil {
-
 					fmt.Println("\nInterrupting current command...")
 					shell.currentCmd.Process.Signal(os.Interrupt)
 				} else {
