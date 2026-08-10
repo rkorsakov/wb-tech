@@ -21,7 +21,7 @@ services:
       - app-net
 
   kafka:
-    image: bitnami/kafka:4.0
+    image: soldevelo/kafka:4.0
     container_name: kafka
     environment:
       - KAFKA_CFG_NODE_ID=0
